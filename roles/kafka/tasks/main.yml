@@ -10,7 +10,7 @@
   import_tasks: install.yml
 
 - name: configure cluster certs
-  impor_tasks: ssl.yml
-  
+  import_tasks: ssl.yml
+
 - name: configure kafka
   import_tasks: configure.yml

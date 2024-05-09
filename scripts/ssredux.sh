@@ -8,7 +8,7 @@ fi
 ## deployment variables
 # <UDF name="kafka_version" label="Kafka version" default="3.7.0" oneof="3.7.0" />
 # <UDF name="token_password" label="Your Linode API token" />
-# <UDF name="sudo_username" label="The limited account user default='admin'>
+# <UDF name="sudo_username" label="The limited account user" default='admin'>
 # <UDF name="client_count" label="Number of clients connecting to Kafka">
 # <UDF name="cluster_size" label="Kafka cluster size" oneOf="3,5,7">
 # <UDF name="clusterheader" label="Cluster Settings" default="Yes" header="Yes">
@@ -21,7 +21,7 @@ fi
 # <UDF name="locality_name" label="Locality" example="Example: Philadelphia" />
 # <UDF name="organization_name" label="Organization" example="Example: Akamai Technologies" />
 # <UDF name="email_address" label="Email Address" example="Example: webmaster@example.com" />
-# <UDF name="ca_common_name" label="CA Common Name" default="Kafka RootCA"  />
+# <UDF name="ca_common_name" label="CA Common Name" example="Example: Kafka RootCA" />
 
 # git repo
 export GIT_REPO="https://github.com/akamai-compute-marketplace/kafka-occ.git"
@@ -59,6 +59,7 @@ EOF
   else
     echo "[fatal] invalid entry for client count '${CLIENT_COUNT}'. Rerun deployment using an interger"
     exit 1
+  fi
 }
 
 # controller temp sshkey
@@ -179,4 +180,6 @@ function installation_complete {
 }
 # main
 run && installation_complete
-cleanup
+if [ "${DEBUG}" == "NO" ]; then
+  cleanup
+fi

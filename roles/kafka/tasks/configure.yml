@@ -1,0 +1,75 @@
+---
+
+- name: create kafka data and log directory
+  file:
+    path: "{{ item.directory }}"
+    state: directory
+    mode: 0755
+    owner: kafka
+    group: kafka
+  loop:
+    - { directory: "{{ kafka_data_directory }}" }
+    - { directory: "{{ kafka_log_directory }}" }
+
+# ssl 
+- name: creating cluster certificates
+  import_tasks: ssl.yml
+
+# config
+
+- name: create kafka cluster uuid
+  command:
+    cmd:  "{{ kafka_bin_directory }}/kafka-storage.sh random-uuid"
+  register: cluster_uuid
+  run_once: true
+  delegate_to: "{{ groups['kafka'][0] }}"
+
+
+### you are here. Just fill it out and keep moving
+- name: backup server and broker properties
+  copy:
+    src: "{{ kafka_config_directory }}/config/kraft/{{ item.config }}"
+    dest: "{{ kafka_config_directory }}/config/kraft/{{ item.config }}.bak"
+    owner: kafka
+    group: kafka
+    mode: 0644
+  loop:
+    - { config: 'server.properties' }
+    - { config: 'broker.properties' }
+
+# for servers that are controller and broker roles
+- name: updating kafka config for controller and broker
+  template:
+    src: templates/server.properties
+    dest: "{{ kafka_config_directory }}/config/kraft/server.properties"
+    owner: kafka
+    group: kafka
+    mode: 0644
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['kafka'] }}"
+  loop_control:
+    index_var: count
+  when: hostvars[groups['kafka'][count]].role == 'controller and broker'
+
+# for servers who are brokers only
+- name: updating kafka config for broker only
+  template:
+    src: templates/broker.properties
+    dest: "{{ kafka_config_directory }}/config/kraft/broker.properties"
+    owner: kafka
+    group: kafka
+    mode: 0644
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['kafka'] }}"
+  loop_control:
+    index_var: count
+  when: hostvars[groups['kafka'][count]].role == 'broker only'
+
+- name: starting kafka
+  systemd:
+    name: kafka
+    state: started
+    enabled: true
+    daemon_reload: true

@@ -1,0 +1,9 @@
+---
+- name: adding sudo user
+  import_tasks: sudouser.yml
+
+- name: add user ssh keys
+  import_tasks: sshkeys.yml
+
+- name: writing gluster creds into file
+  import_tasks: motd.yml

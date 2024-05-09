@@ -1,0 +1,282 @@
+---
+- name: create kafka ssl directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+    owner: kafka
+    group: kafka
+  loop:
+    - '{{ kafka_ssl_directory }}'
+    - '{{ kafka_ssl_ca_directory }}'
+    - '{{ kafka_ssl_req_directory }}'
+    - '{{ kafka_ssl_key_directory }}'
+    - '{{ kafka_ssl_cert_directory }}'
+    - '{{ kafka_ssl_keystore_directory }}'
+    - '{{ kafka_ssl_truststore_directory }}'
+
+### self-signed ca
+
+- name: generate ca passphrase
+  set_fact:
+    ca_password: "{{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits,punctuation') }}"
+  no_log: true
+  run_once: true
+  delegate_to: localhost
+
+## you are here. Check modes, update path and what not.
+
+### create root ca for signing
+- name: generate ca key
+  community.crypto.openssl_privatekey:
+    path: '{{ kafka_ssl_ca_directory }}/ca-key'
+    passphrase: '{{ ca_password }}'
+    cipher: auto
+  #register: ca_key
+  run_once: true
+  delegate_to: localhost
+
+- name: generate ca csr
+  community.crypto.openssl_csr:
+    path: '{{ kafka_ssl_ca_directory }}/ca-csr'
+    privatekey_path: '{{ kafka_ssl_ca_directory }}/ca-key'
+    privatekey_passphrase: '{{ ca_password }}'
+    country_name: '{{ country_name }}'
+    state_or_province_name: '{{ state_or_province_name }}'
+    locality_name: '{{ locality_name }}'
+    organization_name: '{{ organization_name }}'
+    email_address: '{{ email_address }}'
+    common_name: '{{ ca_common_name }}'
+    use_common_name_for_san: false
+    basic_constraints:
+      - 'CA:TRUE'
+    basic_constraints_critical: yes
+    key_usage:
+      - keyCertSign
+    key_usage_critical: true
+  #register: ca_csr
+  run_once: true
+  delegate_to: localhost
+
+- name: generate ca crt
+  community.crypto.x509_certificate:
+    path: '{{ kafka_ssl_ca_directory }}/ca-crt'
+    privatekey_path: '{{ kafka_ssl_ca_directory }}/ca-key'
+    privatekey_passphrase: '{{ ca_password }}'
+    csr_path: '{{ kafka_ssl_ca_directory }}/ca-csr'
+    selfsigned_not_after: +3650d
+    provider: selfsigned
+    owner: kafka
+    group: kafka
+    mode: '0660'
+
+### gen ssl keys
+
+- name: generate server key
+  community.crypto.openssl_privatekey:
+    path: '{{ kafka_ssl_key_directory }}/{{ item.instance.hostname }}.key'
+    owner: kafka
+    group: kafka
+    mode: '0660'
+  loop: "{{ kafka_data.server }}"
+  run_once: true
+  delegate_to: localhost
+
+- name: generate client key
+  community.crypto.openssl_privatekey:
+    path: '{{ kafka_ssl_key_directory }}/client{{ item }}.key'
+    owner: kafka
+    group: kafka
+    mode: '0660'
+  with_sequence: "{{ client_count }}"
+  run_once: true
+  delegate_to: localhost
+
+### gen csrs
+
+- name: generate server csr
+  community.crypto.openssl_csr:
+    path: '{{ kafka_ssl_req_directory }}/{{ item.instance.hostname }}.csr'
+    privatekey_path: '{{ kafka_ssl_key_directory }}/{{ item.instance.hostname }}.key'
+    country_name: '{{ country_name }}'
+    state_or_province_name: '{{ state_or_province_name }}'
+    locality_name: '{{ locality_name }}'
+    organization_name: '{{ organization_name }}'
+    email_address: '{{ email_address }}'
+    common_name: '{{ item.instance.hostname }}'
+    use_common_name_for_san: false
+  loop: "{{ kafka_data.server }}"
+  run_once: true
+  delegate_to: localhost
+  #register: server_csr
+
+- name: generate client csr
+  community.crypto.openssl_csr:
+    path: '{{ kafka_ssl_req_directory }}/client{{ item }}.csr'
+    privatekey_path: '{{ kafka_ssl_key_directory }}/client{{ item }}.key'
+    country_name: '{{ country_name }}'
+    state_or_province_name: '{{ state_or_province_name }}'
+    locality_name: '{{ locality_name }}'
+    organization_name: '{{ organization_name }}'
+    email_address: '{{ email_address }}'
+    common_name: 'client{{ item }}'
+    use_common_name_for_san: false
+  with_sequence: "{{ client_count }}"
+  run_once: true
+  delegate_to: localhost
+  #register: client_csr
+
+### sign cert with ca and get client cert
+
+- name: generate server cert signed with ca cert
+  community.crypto.x509_certificate:
+    path: '{{ kafka_ssl_cert_directory }}/{{ item.instance.hostname }}.crt'
+    privatekey_path: '{{ kafka_ssl_key_directory }}/{{ item.instance.hostname }}.key'
+    csr_path: '{{ kafka_ssl_req_directory }}/{{ item.instance.hostname }}.csr'
+    ownca_path: '{{ kafka_ssl_ca_directory }}/ca-crt'
+    ownca_privatekey_path: '{{ kafka_ssl_ca_directory }}/ca-key'
+    ownca_privatekey_passphrase: '{{ ca_password }}'
+    ownca_not_after: +3650d
+    provider: ownca
+    owner: kafka
+    group: kafka
+    mode: '0660'
+  loop: "{{ kafka_data.server }}"
+  run_once: true
+  delegate_to: localhost    
+
+- name: generate client cert signed with ca cert
+  community.crypto.x509_certificate:
+    path: '{{ kafka_ssl_cert_directory }}/client{{ item }}.crt'
+    privatekey_path: '{{ kafka_ssl_key_directory }}/client{{ item }}.key'
+    csr_path: '{{ kafka_ssl_req_directory }}/client{{ item }}.csr'
+    ownca_path: '{{ kafka_ssl_ca_directory }}/ca-crt'
+    ownca_privatekey_path: '{{ kafka_ssl_ca_directory }}/ca-key'
+    ownca_privatekey_passphrase: '{{ ca_password }}'
+    ownca_not_after: +3650d
+    provider: ownca
+    owner: kafka
+    group: kafka
+    mode: '0660'
+  with_sequence: "{{ client_count }}"
+  run_once: true
+  delegate_to: localhost
+
+### generate pkcs12 file from cert keypair (this is to create the keystore)
+
+- name: create server pcks12 file from
+  community.crypto.openssl_pkcs12:
+    path: '{{ kafka_ssl_cert_directory }}/{{ item.instance.hostname }}.p12'
+    friendly_name: '{{ item.instance.hostname }}'
+    privatekey_path: '{{ kafka_ssl_key_directory }}/{{ item.instance.hostname }}.key'
+    certificate_path: '{{ kafka_ssl_cert_directory }}/{{ item.instance.hostname }}.crt'
+    action: export
+    state: present
+  loop: "{{ kafka_data.server }}"
+  run_once: true
+  delegate_to: localhost    
+
+- name: create client pcks12 file from
+  community.crypto.openssl_pkcs12:
+    path: '{{ kafka_ssl_cert_directory }}/client{{ item }}.p12'
+    friendly_name: 'client{{ item }}'
+    privatekey_path: '{{ kafka_ssl_key_directory }}/client{{ item }}.key'
+    certificate_path: '{{ kafka_ssl_cert_directory }}/client{{ item }}.crt'
+    action: export
+    state: present
+  with_sequence: "{{ client_count }}"
+  run_once: true
+  delegate_to: localhost
+
+### create keystore (keytool) with CA and single client cert (kafka_N.keystore.jks)
+# Here I can import pkcs12 and then the ca
+
+- name: create server keystore
+  community.general.java_cert:
+    pkcs12_path: '{{ kafka_ssl_cert_directory }}/{{ item.instance.hostname }}.p12'
+    cert_alias: '{{ item.instance.hostname }}'
+    keystore_path: '{{ kafka_ssl_keystore_directory }}/{{ item.instance.hostname }}.keystore.jks'
+    keystore_pass: '{{ keystore_password }}'
+    keystore_type: jks
+    keystore_create: true
+    state: present
+  loop: "{{ kafka_data.server }}"
+  run_once: true
+  delegate_to: localhost
+
+- name: create client keystore
+  community.general.java_cert:
+    pkcs12_path: '{{ kafka_ssl_cert_directory }}/client{{ item }}.p12'
+    cert_alias: 'client{{ item }}'
+    keystore_path: '{{ kafka_ssl_keystore_directory }}/client{{ item }}.keystore.jks'
+    keystore_pass: '{{ keystore_password }}'
+    keystore_type: jks
+    keystore_create: true
+    state: present
+  with_sequence: "{{ client_count }}"
+  run_once: true
+  delegate_to: localhost
+
+- name: import ca into server keystore
+  community.general.java_cert:
+    cert_path: '{{ kafka_ssl_ca_directory }}/ca-crt'
+    keystore_path: '{{ kafka_ssl_keystore_directory }}/{{ item.instance.hostname }}.keystore.jks'
+    keystore_pass: '{{ keystore_password }}'
+    #keystore_create: true
+    state: present
+    cert_alias: '{{ ca_common_name }}'
+    trust_cacert: true
+  loop: "{{ kafka_data.server }}"
+  run_once: true
+  delegate_to: localhost
+
+- name: import ca into client keystore
+  community.general.java_cert:
+    cert_path: '{{ kafka_ssl_ca_directory }}/ca-crt'
+    keystore_path: '{{ kafka_ssl_keystore_directory }}/client{{ item }}.keystore.jks'
+    keystore_pass: '{{ keystore_password }}'
+    #keystore_create: true
+    state: present
+    cert_alias: '{{ ca_common_name }}'
+    trust_cacert: true
+  with_sequence: "{{ client_count }}"
+  run_once: true
+  delegate_to: localhost
+
+### create truststore (keytool) with client certs to single truststore (server.truststore.jks)
+
+- name: add ca to truststore
+  community.general.java_cert:
+    cert_path: '{{ kafka_ssl_ca_directory }}/ca-crt'
+    keystore_path: '{{ kafka_ssl_truststore_directory }}/server.truststore.jks'
+    keystore_pass: '{{ truststore_password }}'
+    keystore_create: true
+    state: present
+    cert_alias: '{{ ca_common_name }}'
+    trust_cacert: true
+  run_once: true
+  delegate_to: localhost
+
+- name: add server certs to truststore
+  community.general.java_cert:
+    cert_path: '{{ kafka_ssl_cert_directory }}/{{ item.instance.hostname }}.crt'
+    keystore_path: '{{ kafka_ssl_truststore_directory }}/server.truststore.jks'
+    keystore_pass: '{{ truststore_password }}'
+    #keystore_create: true
+    state: present
+    cert_alias: '{{ item.instance.hostname }}'
+  loop: "{{ kafka_data.server }}"
+  run_once: true
+  delegate_to: localhost
+
+- name: add client certs to truststore
+  community.general.java_cert:
+    cert_path: '{{ kafka_ssl_cert_directory }}/client{{ item }}.crt'
+    keystore_path: '{{ kafka_ssl_truststore_directory }}/server.truststore.jks'
+    keystore_pass: '{{ truststore_password }}'
+    #keystore_create: true
+    state: present
+    cert_alias: 'client{{ item }}'
+  with_sequence: "{{ client_count }}"
+  run_once: true
+  delegate_to: localhost

@@ -1,0 +1,13 @@
+---
+# kafka ansible playbook
+
+# configure kafka
+- name: configure kafka servers
+  hosts: kafka
+  user: root
+  vars_files:
+    - group_vars/kafka/vars
+  roles:
+    - common
+    - kafka
+    #- post

@@ -80,10 +80,11 @@ function build {
   local LINODE_PARAMS=($(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .label,.type,.region,.image,.tags))
   local group_vars="${WORK_DIR}/group_vars/kafka/vars"
   local TEMP_ROOT_PASS=$(openssl rand -base64 32)
-  cat << EOF > ${group_vars}
+  cat << EOF >> ${group_vars}
 # deployment vars
+uuid: ${UUID}
 ssh_keys: ${ANSIBLE_SSH_PUB_KEY}
-instance_prefix: ${LINODE_PARAMS[0]}
+instance_prefix: ${INSTANCE_PREFIX}
 type: ${LINODE_PARAMS[1]}
 region: ${LINODE_PARAMS[2]}
 image: ${LINODE_PARAMS[3]}
@@ -124,8 +125,8 @@ function configure_privateip {
   fi
 }
 function rename_provisioner {
-  local INSTANCE_PREFIX=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .label)
-  export INSTANCE_PREFIX="${INSTANCE_PREFIX}"
+  INSTANCE_PREFIX=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .label)
+  export INSTANCE_PREFIX=${INSTANCE_PREFIX}
   echo "[info] renaming the provisioner"
   curl -s -H "Content-Type: application/json" \
       -H "Authorization: Bearer ${TOKEN_PASSWORD}" \
@@ -139,7 +140,7 @@ function run {
   # install dependancies
   export DEBIAN_FRONTEND=noninteractive
   apt-get update
-  apt-get install -y git python3 python3-pip python3-venv
+  apt-get install -y git python3 python3-pip python3-venv jq
 
   # rename provisioner and configure private IP if not present
   rename_provisioner
@@ -172,7 +173,7 @@ function run {
   build
 
   # run playbooks
-  for playbook in provision.yml site.yml; do ansible-playbook -v $playbook; done
+  for playbook in provision.yml site.yml; do ansible-playbook -v -i hosts $playbook; done
 }
 
 function installation_complete {

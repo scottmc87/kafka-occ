@@ -15,17 +15,6 @@
 - name: creating cluster certificates
   import_tasks: ssl.yml
 
-# config
-
-- name: create kafka cluster uuid
-  command:
-    cmd:  "{{ kafka_bin_directory }}/kafka-storage.sh random-uuid"
-  register: cluster_uuid
-  run_once: true
-  delegate_to: "{{ groups['kafka'][0] }}"
-
-
-### you are here. Just fill it out and keep moving
 - name: backup server and broker properties
   copy:
     src: "{{ kafka_config_directory }}/config/kraft/{{ item.config }}"
@@ -40,7 +29,7 @@
 # for servers that are controller and broker roles
 - name: updating kafka config for controller and broker
   template:
-    src: templates/server.properties
+    src: templates/server.properties.j2
     dest: "{{ kafka_config_directory }}/config/kraft/server.properties"
     owner: kafka
     group: kafka
@@ -55,7 +44,7 @@
 # for servers who are brokers only
 - name: updating kafka config for broker only
   template:
-    src: templates/broker.properties
+    src: templates/broker.properties.j2
     dest: "{{ kafka_config_directory }}/config/kraft/broker.properties"
     owner: kafka
     group: kafka
@@ -66,6 +55,39 @@
   loop_control:
     index_var: count
   when: hostvars[groups['kafka'][count]].role == 'broker only'
+
+- name: create kafka cluster uuid
+  command:
+    cmd:  "{{ kafka_bin_directory }}/kafka-storage.sh random-uuid"
+  register: cluster_uuid
+  run_once: true
+  delegate_to: "{{ groups['kafka'][0] }}"
+
+- name: format data directory for controller and broker nodes
+  command:
+    cmd: "{{ kafka_bin_directory }}/kafka-storage.sh format -t {{ cluster_uuid.stdout }} -c {{ kafka_config_directory }}/config/kraft/server.properties"
+  become: true
+  become_user: kafka
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['kafka'] }}"
+  loop_control:
+    index_var: count
+  when: hostvars[groups['kafka'][count]].role == 'controller and broker'
+
+- name: format data directory broker nodes
+  command:
+    cmd: "{{ kafka_bin_directory }}/kafka-storage.sh format -t {{ cluster_uuid.stdout }} -c {{ kafka_config_directory }}/config/kraft/broker.properties"
+  become: true
+  become_user: kafka    
+  run_once: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['kafka'] }}"
+  loop_control:
+    index_var: count
+  when: hostvars[groups['kafka'][count]].role == 'broker only'
+
+# data dir owner updated
 
 - name: starting kafka
   systemd:

@@ -68,7 +68,7 @@
     provider: selfsigned
     owner: kafka
     group: kafka
-    mode: '0660'
+    mode: '0640'
 
 ### gen ssl keys
 
@@ -77,7 +77,7 @@
     path: '{{ kafka_ssl_key_directory }}/{{ item.instance.hostname }}.key'
     owner: kafka
     group: kafka
-    mode: '0660'
+    mode: '0600'
   loop: "{{ kafka_data.server }}"
   run_once: true
   delegate_to: localhost
@@ -87,8 +87,8 @@
     path: '{{ kafka_ssl_key_directory }}/client{{ item }}.key'
     owner: kafka
     group: kafka
-    mode: '0660'
-  with_sequence: "{{ client_count }}"
+    mode: '0600'
+  with_sequence: count="{{ client_count }}"
   run_once: true
   delegate_to: localhost
 
@@ -105,6 +105,8 @@
     email_address: '{{ email_address }}'
     common_name: '{{ item.instance.hostname }}'
     use_common_name_for_san: false
+    owner: kafka
+    group: kafka
   loop: "{{ kafka_data.server }}"
   run_once: true
   delegate_to: localhost
@@ -121,7 +123,9 @@
     email_address: '{{ email_address }}'
     common_name: 'client{{ item }}'
     use_common_name_for_san: false
-  with_sequence: "{{ client_count }}"
+    owner: kafka
+    group: kafka    
+  with_sequence: count="{{ client_count }}"
   run_once: true
   delegate_to: localhost
   #register: client_csr
@@ -140,7 +144,7 @@
     provider: ownca
     owner: kafka
     group: kafka
-    mode: '0660'
+    mode: '0640'
   loop: "{{ kafka_data.server }}"
   run_once: true
   delegate_to: localhost    
@@ -157,8 +161,8 @@
     provider: ownca
     owner: kafka
     group: kafka
-    mode: '0660'
-  with_sequence: "{{ client_count }}"
+    mode: '0640'
+  with_sequence: count="{{ client_count }}"
   run_once: true
   delegate_to: localhost
 
@@ -170,8 +174,11 @@
     friendly_name: '{{ item.instance.hostname }}'
     privatekey_path: '{{ kafka_ssl_key_directory }}/{{ item.instance.hostname }}.key'
     certificate_path: '{{ kafka_ssl_cert_directory }}/{{ item.instance.hostname }}.crt'
+    passphrase: '{{ pkcs12_password }}'
     action: export
     state: present
+    owner: kafka
+    group: kafka
   loop: "{{ kafka_data.server }}"
   run_once: true
   delegate_to: localhost    
@@ -182,9 +189,12 @@
     friendly_name: 'client{{ item }}'
     privatekey_path: '{{ kafka_ssl_key_directory }}/client{{ item }}.key'
     certificate_path: '{{ kafka_ssl_cert_directory }}/client{{ item }}.crt'
+    passphrase: '{{ pkcs12_password }}'
     action: export
     state: present
-  with_sequence: "{{ client_count }}"
+    owner: kafka
+    group: kafka    
+  with_sequence: count="{{ client_count }}"
   run_once: true
   delegate_to: localhost
 
@@ -195,11 +205,14 @@
   community.general.java_cert:
     pkcs12_path: '{{ kafka_ssl_cert_directory }}/{{ item.instance.hostname }}.p12'
     cert_alias: '{{ item.instance.hostname }}'
+    pkcs12_alias: '{{ item.instance.hostname }}'
+    pkcs12_password: '{{ pkcs12_password }}'
     keystore_path: '{{ kafka_ssl_keystore_directory }}/{{ item.instance.hostname }}.keystore.jks'
     keystore_pass: '{{ keystore_password }}'
-    keystore_type: jks
     keystore_create: true
     state: present
+    owner: kafka
+    group: kafka    
   loop: "{{ kafka_data.server }}"
   run_once: true
   delegate_to: localhost
@@ -208,12 +221,15 @@
   community.general.java_cert:
     pkcs12_path: '{{ kafka_ssl_cert_directory }}/client{{ item }}.p12'
     cert_alias: 'client{{ item }}'
+    pkcs12_alias: 'client{{ item }}'
+    pkcs12_password: '{{ pkcs12_password }}'    
     keystore_path: '{{ kafka_ssl_keystore_directory }}/client{{ item }}.keystore.jks'
     keystore_pass: '{{ keystore_password }}'
-    keystore_type: jks
     keystore_create: true
     state: present
-  with_sequence: "{{ client_count }}"
+    owner: kafka
+    group: kafka    
+  with_sequence: count="{{ client_count }}"
   run_once: true
   delegate_to: localhost
 
@@ -239,7 +255,7 @@
     state: present
     cert_alias: '{{ ca_common_name }}'
     trust_cacert: true
-  with_sequence: "{{ client_count }}"
+  with_sequence: count="{{ client_count }}"
   run_once: true
   delegate_to: localhost
 
@@ -254,6 +270,8 @@
     state: present
     cert_alias: '{{ ca_common_name }}'
     trust_cacert: true
+    owner: kafka
+    group: kafka
   run_once: true
   delegate_to: localhost
 
@@ -265,6 +283,8 @@
     #keystore_create: true
     state: present
     cert_alias: '{{ item.instance.hostname }}'
+    owner: kafka
+    group: kafka  
   loop: "{{ kafka_data.server }}"
   run_once: true
   delegate_to: localhost
@@ -277,6 +297,8 @@
     #keystore_create: true
     state: present
     cert_alias: 'client{{ item }}'
-  with_sequence: "{{ client_count }}"
+    owner: kafka
+    group: kafka    
+  with_sequence: count="{{ client_count }}"
   run_once: true
   delegate_to: localhost

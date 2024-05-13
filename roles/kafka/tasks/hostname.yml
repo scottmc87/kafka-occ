@@ -15,6 +15,6 @@
     name: "{{ kafka_data.server[count].instance.hostname }}"
   run_once: true
   delegate_to: "{{ item }}"
-  loop: "{{ groups['kafka_servers'] }}"
+  loop: "{{ groups['kafka'] }}"
   loop_control:
     index_var: count

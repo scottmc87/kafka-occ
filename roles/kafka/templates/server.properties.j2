@@ -150,11 +150,11 @@ log.retention.check.interval.ms=300000
 #### SSL #####
 
 ## This needs to be updated - esegura ##
-ssl.truststore.location={{ kafka_ssl_directory }}/truststore/{{ kafka_data.server[count].instance.hostname }}.server.truststore.jks
+ssl.truststore.location={{ kafka_ssl_directory }}/truststore/server.truststore.jks
 ssl.truststore.password={{ truststore_password}}
-ssl.keystore.location={{ kafka_ssl_directory }}/keystore/{{ kafka_data.server[count].instance.hostname }}.server.keystore.jks
+ssl.keystore.location={{ kafka_ssl_directory }}/keystore/{{ kafka_data.server[count].instance.hostname }}.keystore.jks
 ssl.keystore.password={{ keystore_password }}
-ssl.key.password={{ key_password }}
+#ssl.key.password={{ key_password }}
 
 ### log ###
 audit.logger.class.name=org.apache.kafka.common.security.audit.AuditLogger

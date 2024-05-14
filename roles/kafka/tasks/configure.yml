@@ -2,14 +2,14 @@
 
 - name: create kafka data and log directory
   file:
-    path: "{{ item.directory }}"
+    path: "{{ kafka_log_directory }}"
     state: directory
     mode: 0755
     owner: kafka
     group: kafka
-  loop:
+  #loop:
   #  - { directory: "{{ kafka_data_directory }}" }
-    - { directory: "{{ kafka_log_directory }}" }
+  #  - { directory: "{{ kafka_log_directory }}" }
 
 # ssl 
 - name: creating cluster certificates

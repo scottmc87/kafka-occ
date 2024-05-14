@@ -32,6 +32,8 @@
     path: '{{ kafka_ssl_ca_directory }}/ca-key'
     passphrase: '{{ ca_password }}'
     cipher: auto
+    owner: kafka
+    group: kafka
   #register: ca_key
   run_once: true
   delegate_to: localhost
@@ -54,6 +56,8 @@
     key_usage:
       - keyCertSign
     key_usage_critical: true
+    owner: kafka
+    group: kafka
   #register: ca_csr
   run_once: true
   delegate_to: localhost

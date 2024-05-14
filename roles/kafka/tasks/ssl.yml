@@ -73,6 +73,8 @@
     owner: kafka
     group: kafka
     mode: '0640'
+  run_once: true
+  delegate_to: localhost    
 
 ### gen ssl keys
 

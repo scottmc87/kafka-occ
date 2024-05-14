@@ -12,8 +12,8 @@
   #  - { directory: "{{ kafka_log_directory }}" }
 
 # ssl 
-- name: creating cluster certificates
-  import_tasks: ssl.yml
+#- name: creating cluster certificates
+#  import_tasks: ssl.yml
 
 - name: backup server and broker properties
   copy:

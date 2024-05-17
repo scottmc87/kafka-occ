@@ -1,4 +1,5 @@
 ---
+# create cluster ssl certs
 - name: create kafka ssl directory
   file:
     path: "{{ item }}"
@@ -179,11 +180,11 @@
 
 - name: create server pcks12 file from
   community.crypto.openssl_pkcs12:
-    path: '{{ kafka_ssl_cert_directory }}/{{ kafka_data.server[count].instance.hostname }}.keystore.jks'
+    path: '{{ kafka_ssl_keystore_directory }}/{{ kafka_data.server[count].instance.hostname }}.keystore.jks'
     friendly_name: '{{ kafka_data.server[count].instance.hostname }}'
     privatekey_path: '{{ kafka_ssl_key_directory }}/{{ kafka_data.server[count].instance.hostname }}.key'
     certificate_path: '{{ kafka_ssl_cert_directory }}/{{ kafka_data.server[count].instance.hostname }}.crt'
-    passphrase: '{{ pkcs12_password }}'
+    passphrase: '{{ keystore_password }}'
     action: export
     state: present
     owner: kafka
@@ -196,11 +197,11 @@
 
 - name: create client pcks12 file from
   community.crypto.openssl_pkcs12:
-    path: '{{ kafka_ssl_cert_directory }}/client{{ item }}.keystore.jks'
+    path: '{{ kafka_ssl_keystore_directory }}/client{{ item }}.keystore.jks'
     friendly_name: 'client{{ item }}'
     privatekey_path: '{{ kafka_ssl_key_directory }}/client{{ item }}.key'
     certificate_path: '{{ kafka_ssl_cert_directory }}/client{{ item }}.crt'
-    passphrase: '{{ pkcs12_password }}'
+    passphrase: '{{ keystore_password }}'
     action: export
     state: present
     owner: kafka

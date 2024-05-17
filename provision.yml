@@ -19,7 +19,7 @@
         truststore_password: {{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits') }}
         keystore_password: {{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits') }}
         key_password: {{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits') }}
-        ca_password: "{{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits,punctuation') }}"
+        ca_password: "{{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits') }}"
         pkcs12_password: {{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits') }}
         sudo_password: {{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits') }}
     no_log: true

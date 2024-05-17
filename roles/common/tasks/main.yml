@@ -28,6 +28,7 @@
     - fail2ban
     - default-jdk
     - ufw
+    - acl
     state: latest
 
 - name: fail2ban jail.local

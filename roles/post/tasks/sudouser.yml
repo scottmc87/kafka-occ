@@ -1,5 +1,5 @@
 ---
-- name: set sudo user
+- name: create sudo user
   user:
         name: "{{ sudo_username }}"
         shell: /bin/bash

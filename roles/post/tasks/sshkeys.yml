@@ -28,7 +28,7 @@
     owner: "{{ sudo_username }}"
     group: "{{ sudo_username }}"
     mode: '0600'
-  when: add_keys_prompt == 'yes'
+  when: add_ssh_keys == 'yes'
 
 - name: remove ansible from authorized_keys
   lineinfile:

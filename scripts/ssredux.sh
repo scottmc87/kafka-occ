@@ -94,7 +94,7 @@ kafka_version: ${KAFKA_VERSION}
 cluster_size: ${CLUSTER_SIZE}
 controller_count: 3
 client_count: ${CLIENT_COUNT}
-add_keys_prompt: ${ADD_KEYS_PROMPT}
+add_ssh_keys: ${ADD_SSH_KEYS}
 
 # ssl config
 country_name: ${COUNTRY_NAME}

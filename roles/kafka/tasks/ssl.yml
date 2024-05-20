@@ -1,5 +1,6 @@
 ---
-# create cluster ssl certs
+# create cluster ssl certificates
+
 - name: create kafka ssl directory
   file:
     path: "{{ item }}"
@@ -16,7 +17,7 @@
     - '{{ kafka_ssl_keystore_directory }}'
     - '{{ kafka_ssl_truststore_directory }}'
 
-### create root ca for signing
+# create root ca for signing
 - name: generate ca key
   community.crypto.openssl_privatekey:
     path: '{{ kafka_ssl_ca_directory }}/ca-key'
@@ -70,7 +71,7 @@
   run_once: true
   delegate_to: localhost
 
-### gen ssl keys
+# gen ssl keys
 
 - name: generate server key
   community.crypto.openssl_privatekey:
@@ -96,7 +97,7 @@
   run_once: true
   delegate_to: localhost
 
-### gen csrs
+# gen csrs
 
 - name: generate server csr
   community.crypto.openssl_csr:
@@ -134,7 +135,7 @@
   run_once: true
   delegate_to: localhost
 
-### sign cert with ca and get client cert
+# sign cert with ca and get client cert
 
 - name: generate server cert signed with ca cert
   community.crypto.x509_certificate:
@@ -176,7 +177,7 @@
   run_once: true
   delegate_to: localhost
 
-### generate pkcs12 file from cert keypair
+# generate pkcs12 file from cert keypair
 
 - name: create server pcks12 file from
   community.crypto.openssl_pkcs12:
@@ -210,8 +211,9 @@
   run_once: true
   delegate_to: localhost
     
-### create truststore (keytool) with client certs to single truststore (server.truststore.jks)
+# create truststore (keytool) with client/server certs to single truststore (server.truststore.jks)
 
+# establish chain of trust
 - name: add ca to truststore
   community.general.java_cert:
     cert_path: '{{ kafka_ssl_ca_directory }}/ca-crt'

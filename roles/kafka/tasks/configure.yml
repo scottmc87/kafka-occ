@@ -1,4 +1,5 @@
 ---
+# configure kafka 
 
 - name: create kafka data and log directory
   file:
@@ -7,13 +8,6 @@
     mode: 0755
     owner: kafka
     group: kafka
-  #loop:
-  #  - { directory: "{{ kafka_data_directory }}" }
-  #  - { directory: "{{ kafka_log_directory }}" }
-
-# ssl 
-#- name: creating cluster certificates
-#  import_tasks: ssl.yml
 
 - name: backup server and broker properties
   copy:
@@ -86,8 +80,6 @@
   loop_control:
     index_var: count
   when: hostvars[groups['kafka'][count]].role == 'broker only'
-
-# data dir owner updated
 
 - name: starting kafka
   systemd:

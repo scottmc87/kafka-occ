@@ -1,4 +1,5 @@
 ---
+# install kafka in cluster
 
 - name: create kafka config directory
   file:

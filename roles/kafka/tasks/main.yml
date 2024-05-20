@@ -1,9 +1,10 @@
 ---
+# main
 
 - name: configure hostname
   import_tasks: hostname.yml
 
-- name: add kafkfa system user
+- name: create kafka user
   import_tasks: user.yml
 
 - name: installing kafka

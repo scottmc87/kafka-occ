@@ -1,4 +1,6 @@
 ---
+# configure hostname and hosts file
+
 - name: update /etc/hosts
   blockinfile:
     path: /etc/hosts

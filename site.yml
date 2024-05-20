@@ -1,6 +1,4 @@
 ---
-# kafka ansible playbook
-
 # configure kafka
 - name: configure kafka servers
   hosts: kafka

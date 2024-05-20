@@ -1,5 +1,6 @@
 ---
 # motd and creds gen
+
 - name: copy MOTD template to /etc/motd
   template:
     src: templates/motd.j2
@@ -16,6 +17,4 @@
       sudo password: {{ sudo_password }}
       truststore_password: {{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits') }}
       keystore_password: {{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits') }}
-      key_password: {{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits') }}
       ca_password: {{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits') }}
-      pkcs12_password: {{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits') }}     

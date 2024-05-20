@@ -1,4 +1,5 @@
 ---
+# create sudo username
 - name: create sudo user
   user:
         name: "{{ sudo_username }}"

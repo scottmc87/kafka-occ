@@ -1,5 +1,5 @@
 ---
-# roles/post/tasks/sshkeys.yml
+# add root password and keys to cluster nodes
 
 - name: get root password
   slurp:

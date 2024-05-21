@@ -25,13 +25,10 @@ process.roles=broker,controller
 
 # The node id associated with this instance's roles
 
-### This needs to be templated out - esegura ### 
 node.id={{ count + 1 }}
 
 # The connect string for the controller quorum
 #controller.quorum.voters=1@localhost:9093
-
-### This needs to be templated out - esegura ###
 #controller.quorum.voters=1@kafka1:9093,2@kafka2:9093
 controller.quorum.voters=1@{{ kafka_data.server[0].instance.hostname }}:9093,2@{{ kafka_data.server[1].instance.hostname }}:9093,3@{{ kafka_data.server[2].instance.hostname }}:9093
 
@@ -58,8 +55,6 @@ ssl.client.auth=required
 # If not set, it uses the value for "listeners".
 #advertised.listeners=PLAINTEXT://localhost:9092
 #advertised.listeners=PLAINTEXT://kafka1:9092
-
-## This needs to be templated out - esegura ###
 #advertised.listeners=SSL://kafka1:9092
 advertised.listeners=SSL://{{ kafka_data.server[count].instance.hostname }}:9092
 
@@ -148,8 +143,6 @@ log.segment.bytes=1073741824
 log.retention.check.interval.ms=300000
 
 #### SSL #####
-
-## This needs to be updated - esegura ##
 ssl.truststore.location={{ kafka_ssl_directory }}/truststore/server.truststore.jks
 ssl.truststore.password={{ truststore_password}}
 ssl.keystore.location={{ kafka_ssl_directory }}/keystore/{{ kafka_data.server[count].instance.hostname }}.keystore.jks

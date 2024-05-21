@@ -80,7 +80,6 @@
     group: kafka
     mode: '0600'
     return_content: true
-  register: watt
   run_once: true
   delegate_to: "{{ item }}"
   loop: "{{ groups['kafka'] }}"

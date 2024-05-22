@@ -15,6 +15,6 @@
     content: |
       sudo username: {{ sudo_username }}
       sudo password: {{ sudo_password }}
-      truststore_password: {{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits') }}
-      keystore_password: {{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits') }}
-      ca_password: {{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits') }}
+      truststore_password: {{ truststore_password }}
+      keystore_password: {{ keystore_password }}
+      ca_password: {{ ca_password }}

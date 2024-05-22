@@ -143,7 +143,6 @@ ssl.truststore.location={{ kafka_ssl_directory }}/truststore/server.truststore.j
 ssl.truststore.password={{ truststore_password}}
 ssl.keystore.location={{ kafka_ssl_directory }}/keystore/{{ kafka_data.server[count].instance.hostname }}.keystore.jks
 ssl.keystore.password={{ keystore_password }}
-#ssl.key.password={{ key_password }}
 
 ### log ###
 audit.logger.class.name=org.apache.kafka.common.security.audit.AuditLogger

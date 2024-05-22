@@ -7,7 +7,7 @@ Our marketplace application allows the deployment of a Kafka cluster using Kafka
 
 - While the provisioning, the cluster will be configured with mTLS for authentication. This means that inter-broker communication as well as client authentication is established via certificate identity
 - The minimum cluster size is 3. At all times, 3 controllers are configured in the cluster for fault-tolerance.
-- Client's that connect to the cluster will need their own valid certificate. All certificates are signed with a self-signed Ccerticate Authority (CA). Client keystores and truststore are found on the first Kafka node in `/etc/kafka/ssl/keystore` and `/etc/kafka/ssl/truststore`
+- Client's that connect to the cluster will need their own valid certificate. All certificates are signed with a self-signed Certicate Authority (CA). Client keystores and truststore are found on the first Kafka node in `/etc/kafka/ssl/keystore` and `/etc/kafka/ssl/truststore`
 - The CA key and certificate pair are on the first Kafka node in `/etc/kafka/ssl/ca`
 
 ## Distributions

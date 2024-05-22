@@ -107,6 +107,18 @@ EOF
 }
 
 # cluster functions
+
+function add_privateip {
+  echo "[info] Adding instance private IP"
+  curl -H "Content-Type: application/json" \
+      -H "Authorization: Bearer ${TOKEN_PASSWORD}" \
+      -X POST -d '{
+        "type": "ipv4",
+        "public": false
+      }' \
+      https://api.linode.com/v4/linode/instances/${LINODE_ID}/ips
+}
+
 function get_privateip {
   curl -s -H "Content-Type: application/json" \
     -H "Authorization: Bearer ${TOKEN_PASSWORD}" \

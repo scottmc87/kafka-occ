@@ -77,7 +77,8 @@ function controller_sshkey {
 # build instance vars before cluster deployment
 function build {
   local KAFKA_VERSION="${KAFKA_VERSION}"
-  local LINODE_PARAMS=($(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .label,.type,.region,.image,.tags))
+  local LINODE_PARAMS=($(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .label,.type,.region,.image))
+  local LINODE_TAGS=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .tags)
   local group_vars="${WORK_DIR}/group_vars/kafka/vars"
   local TEMP_ROOT_PASS=$(openssl rand -base64 32)
   cat << EOF >> ${group_vars}
@@ -88,7 +89,7 @@ instance_prefix: ${INSTANCE_PREFIX}
 type: ${LINODE_PARAMS[1]}
 region: ${LINODE_PARAMS[2]}
 image: ${LINODE_PARAMS[3]}
-linode_tags: ${LINODE_PARAMS[4]}
+linode_tags: ${LINODE_TAGS}
 root_pass: ${TEMP_ROOT_PASS}
 kafka_version: ${KAFKA_VERSION}
 cluster_size: ${CLUSTER_SIZE}

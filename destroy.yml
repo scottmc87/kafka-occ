@@ -1,0 +1,19 @@
+---
+# destroy instances
+
+- name: destroying kafka instances 
+  hosts: localhost
+  connection: local
+  vars_files:
+      - group_vars/kafka/vars
+  
+  vars:
+    count: '{{ cluster_size - 1 }}'
+
+  tasks:
+  - name: deleting instances except provisioner
+    linode.cloud.instance:
+      label: '{{ instance_prefix }}{{ item | int + 1 }}-{{ uuid }}'
+      api_token: '{{ token }}'
+      state: absent
+    with_sequence: count='{{ count }}'

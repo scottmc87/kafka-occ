@@ -1,0 +1,6 @@
+# handlers
+
+- name: restart kakfa
+  systemd:
+    name: kafka
+    state: restarted

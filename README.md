@@ -76,7 +76,7 @@ curl -H "Content-Type: application/json" \
         "organization_name": "${ORGANIZATION_NAME},
         "email_address": "${EMAIL_ADDRESS}"
     },
-    "stackscript_id": 00000000000,
+    "stackscript_id": 1377657,
     "tags": [],
     "type": "g6-dedicated-4"
 }' https://api.linode.com/v4/linode/instances
@@ -89,7 +89,7 @@ linode-cli linodes create \
   --label linode123 \
   --root_pass ${ROOT_PASS} \
   --booted true \
-  --stackscript_id 00000000000 \
+  --stackscript_id 1377657 \
   --stackscript_data '{ 
         "kafka_version": "3.7.0",
         "clusterheader": "Yes",

@@ -32,8 +32,8 @@
       root_pass: '{{ root_pass }}'
       authorized_keys: '{{ ssh_keys }}'
       private_ip: true
-      #stackscript_id: null
-      #ua_prefix: 'marketplace-kafka-occ'          
+      stackscript_id: 1382315
+      ua_prefix: 'marketplace-kafka-occ'          
       tags: '{{ linode_tags }}'
       state: present
     with_sequence: count='{{ count }}'

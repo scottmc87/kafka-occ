@@ -58,6 +58,6 @@ function deploy {
 
 # main
 case $1 in
-    ansible:build) "$@"; exit;;
-    ansible:deploy) "$@"; exit;;
+    build) "$@"; exit;;
+    deploy) "$@"; exit;;
 esac

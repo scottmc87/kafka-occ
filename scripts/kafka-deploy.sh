@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-DEBUG="YES"
+DEBUG="NO"
 if [ "${DEBUG}" == "NO" ]; then
   trap "cleanup $? $LINENO" EXIT
 fi
@@ -105,9 +105,9 @@ function setup {
   fi  
 
   # clone repo and set up ansible environment
-  git clone ${GIT_REPO} /tmp/linode
+  git clone ${GIT_REPO} ${WORK_DIR}
   # for a single testing branch
-  #git -C /tmp clone -b ${BRANCH} ${GIT_REPO}
+  # git clone -b ${BRANCH} ${GIT_REPO} ${WORK_DIR}
 
   # venv
   cd ${WORK_DIR}

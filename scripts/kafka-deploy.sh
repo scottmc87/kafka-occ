@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-DEBUG="NO"
+DEBUG="YES"
 if [ "${DEBUG}" == "NO" ]; then
   trap "cleanup $? $LINENO" EXIT
 fi
@@ -38,74 +38,13 @@ function cleanup {
   fi
 }
 
-# Deployment UDFs
-function udf {
-  local group_vars="${WORK_DIR}/group_vars/kafka/vars"
-  sed 's/  //g' <<EOF > ${group_vars}
-  # sudo username
-  sudo_username: ${SUDO_USERNAME}
-EOF
-
-  # vars
-  if [[ -n ${TOKEN_PASSWORD} ]]; then
-    echo "token: ${TOKEN_PASSWORD}" >> ${group_vars}
-  else 
-    echo "No API token entered"
-  fi
-
-  # validate client_count. Hard fail if non-numeric value is entered.
-  if [[ ${CLIENT_COUNT} =~ ^-?[1-9][0-9]*$ ]]; then
-    echo "valid count entered for client count"
-  else
-    echo "[fatal] invalid entry for client count '${CLIENT_COUNT}'. Rerun deployment using an interger"
-    exit 1
-  fi
-}
-
-# controller temp sshkey
-function controller_sshkey {
-    ssh-keygen -o -a 100 -t ed25519 -C "ansible" -f "${HOME}/.ssh/id_ansible_ed25519" -q -N "" <<<y >/dev/null
-    export ANSIBLE_SSH_PUB_KEY=$(cat ${HOME}/.ssh/id_ansible_ed25519.pub)
-    export ANSIBLE_SSH_PRIV_KEY=$(cat ${HOME}/.ssh/id_ansible_ed25519)
-    export SSH_KEY_PATH="${HOME}/.ssh/id_ansible_ed25519"
-    chmod 700 ${HOME}/.ssh
-    chmod 600 ${SSH_KEY_PATH}
-    eval $(ssh-agent)
-    ssh-add ${SSH_KEY_PATH}
-}
-
-# build instance vars before cluster deployment
-function build {
-  local KAFKA_VERSION="${KAFKA_VERSION}"
-  local LINODE_PARAMS=($(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .label,.type,.region,.image))
-  local LINODE_TAGS=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .tags)
-  local group_vars="${WORK_DIR}/group_vars/kafka/vars"
-  local TEMP_ROOT_PASS=$(openssl rand -base64 32)
-  cat << EOF >> ${group_vars}
-# deployment vars
-uuid: ${UUID}
-ssh_keys: ${ANSIBLE_SSH_PUB_KEY}
-instance_prefix: ${INSTANCE_PREFIX}
-type: ${LINODE_PARAMS[1]}
-region: ${LINODE_PARAMS[2]}
-image: ${LINODE_PARAMS[3]}
-linode_tags: ${LINODE_TAGS}
-root_pass: ${TEMP_ROOT_PASS}
-kafka_version: ${KAFKA_VERSION}
-cluster_size: ${CLUSTER_SIZE}
-controller_count: 3
-client_count: ${CLIENT_COUNT}
-add_ssh_keys: '${ADD_SSH_KEYS}'
-
-# ssl config
-country_name: ${COUNTRY_NAME}
-state_or_province_name: ${STATE_OR_PROVINCE_NAME}
-locality_name: ${LOCALITY_NAME}
-organization_name: ${ORGANIZATION_NAME}
-email_address: ${EMAIL_ADDRESS}
-ca_common_name: ${CA_COMMON_NAME}
-EOF
-}
+# validate client_count. Hard fail if non-numeric value is entered.
+if [[ ${CLIENT_COUNT} =~ ^-?[1-9][0-9]*$ ]]; then
+  echo "valid count entered for client count"
+else
+  echo "[fatal] invalid entry for client count '${CLIENT_COUNT}'. Rerun deployment using an interger"
+  exit 1
+fi
 
 # cluster functions
 
@@ -149,7 +88,7 @@ function rename_provisioner {
       https://api.linode.com/v4/linode/instances/${LINODE_ID}
 }
 
-function run {
+function setup {
   # install dependancies
   export DEBIAN_FRONTEND=noninteractive
   apt-get update
@@ -178,22 +117,17 @@ function run {
   pip install pip --upgrade
   pip install -r requirements.txt
   ansible-galaxy install -r collections.yml
-  
-  # populate group_vars
-  udf
-  # build instance vars
-  controller_sshkey
-  build
-
-  # run playbooks
-  for playbook in provision.yml site.yml; do ansible-playbook -v -i hosts $playbook; done
+  # copy run script
+  cp scripts/run.sh /usr/local/bin/run
+  chmod +x /usr/local/bin/run
 }
-
 function installation_complete {
   echo "Installation Complete"
 }
 # main
-run && installation_complete
+setup
+run build
+run deploy && installation_complete
 if [ "${DEBUG}" == "NO" ]; then
   cleanup
 fi

@@ -4,6 +4,7 @@ DEBUG="NO"
 if [ "${DEBUG}" == "NO" ]; then
   trap "cleanup $? $LINENO" EXIT
 fi
+
 # controller temp sshkey
 function controller_sshkey {
     ssh-keygen -o -a 100 -t ed25519 -C "ansible" -f "${HOME}/.ssh/id_ansible_ed25519" -q -N "" <<<y >/dev/null
@@ -54,6 +55,20 @@ EOF
 
 function deploy { 
     for playbook in provision.yml site.yml; do ansible-playbook -v -i hosts $playbook; done
+}
+
+## cleanup ##
+function cleanup {
+  if [ "$?" != "0" ] || [ "$SUCCESS" == "true" ]; then
+    deactivate
+    cd ${HOME}
+    if [ -d "/tmp/linode" ]; then
+      rm -rf /tmp/linode
+    fi
+    if [ -f "/usr/local/bin/run" ]; then
+      rm /usr/local/bin/run
+    fi
+  fi
 }
 
 # main

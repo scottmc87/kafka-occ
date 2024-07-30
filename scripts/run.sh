@@ -54,7 +54,8 @@ EOF
 }
 
 function deploy { 
-    for playbook in provision.yml site.yml; do ansible-playbook -v -i hosts $playbook; done
+    echo "[info] running ansible playbooks"
+    ansible-playbook -v -i hosts provision.yml && ansible-playbook -v -i hosts site.yml
 }
 
 ## cleanup ##

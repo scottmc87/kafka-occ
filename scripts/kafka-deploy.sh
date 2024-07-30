@@ -40,6 +40,11 @@ function cleanup {
   fi
 }
 
+function destroy {
+    echo "[info] destroying instances except provisioner node" 
+    ansible-playbook destroy.yml
+}
+
 # validate client_count. Hard fail if non-numeric value is entered.
 if [[ ${CLIENT_COUNT} =~ ^-?[1-9][0-9]*$ ]]; then
   echo "valid count entered for client count"

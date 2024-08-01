@@ -29,7 +29,7 @@
       [FATAL] illegal username provided --> {{ sudo_username }} 
       The user already exist on the system. Please redeploy the Marketplace app using a non-system user for the sudo user value.
       {{ system_users }}
-  when: username in system_users
+  when: sudo_username in system_users
 
 # create sudo username
 - name: create sudo user

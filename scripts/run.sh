@@ -61,7 +61,6 @@ function deploy {
 ## cleanup ##
 function cleanup {
   if [ "$?" != "0" ] || [ "$SUCCESS" == "true" ]; then
-    deactivate
     cd ${HOME}
     if [ -d "/tmp/linode" ]; then
       rm -rf /tmp/linode

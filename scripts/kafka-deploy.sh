@@ -32,17 +32,15 @@ export UUID=$(uuidgen | awk -F - '{print $1}')
 exec > >(tee /dev/ttyS0 /var/log/stackscript.log) 2>&1
 
 function cleanup {
-  if [ "$?" != "0" ]; then
-    echo "PLAYBOOK FAILED. See /var/log/stackscript.log for details."
-    rm ${HOME}/.ssh/id_ansible_ed25519{,.pub}
-    destroy
-    exit 1
+  if [ "$?" != "0" ] || [ "$SUCCESS" == "true" ]; then
+    cd ${HOME}
+    if [ -d ${WORK_DIR} ]; then
+      rm -rf ${WORK_DIR}
+    fi
+    if [ -f "/usr/local/bin/run" ]; then
+      rm /usr/local/bin/run
+    fi
   fi
-}
-
-function destroy {
-    echo "[info] destroying instances except provisioner node" 
-    ansible-playbook destroy.yml
 }
 
 # validate client_count. Hard fail if non-numeric value is entered.

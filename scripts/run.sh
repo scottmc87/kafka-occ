@@ -59,16 +59,19 @@ function deploy {
 }
 
 ## cleanup ##
+
 function cleanup {
-  if [ "$?" != "0" ] || [ "$SUCCESS" == "true" ]; then
-    cd ${HOME}
-    if [ -d "/tmp/linode" ]; then
-      rm -rf /tmp/linode
-    fi
-    if [ -f "/usr/local/bin/run" ]; then
-      rm /usr/local/bin/run
-    fi
+  if [ "$?" != "0" ]; then
+    echo "PLAYBOOK FAILED. See /var/log/stackscript.log for details."
+    rm ${HOME}/.ssh/id_ansible_ed25519{,.pub}
+    destroy
+    exit 1
   fi
+}
+
+function destroy {
+  echo "[info] destroying instances except provisioner node" 
+  ansible-playbook destroy.yml
 }
 
 # main

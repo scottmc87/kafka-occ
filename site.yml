@@ -7,8 +7,8 @@
   vars_files:
     - group_vars/kafka/vars
   tasks:
-    - name: creating sudo user
-      import_task: roles/post/tasks/sudouser.yml
+   - name: creating sudo user
+     import_task: roles/post/tasks/sudouser.yml
   roles:
     - common
     - kafka

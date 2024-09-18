@@ -6,7 +6,7 @@ if [ "${DEBUG}" == "NO" ]; then
 fi
 
 ## deployment variables
-# <UDF name="kafka_version" label="Kafka version" default="3.7.0" oneof="3.7.0" />
+# <UDF name="kafka_version" label="Kafka version" default="3.8.0" oneof="3.8.0" />
 # <UDF name="token_password" label="Your Linode API token" />
 # <UDF name="sudo_username" label="The limited account user" default='admin'>
 # <UDF name="client_count" label="Number of clients connecting to Kafka">
